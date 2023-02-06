@@ -9,6 +9,8 @@ export const convolve = (src: NdArray<TypedArray>, dst: NdArray<TypedArray>, fil
 	const fixedFracMul = 2 ** (fixedFracBits - 1);
 	const fixedFracMul2 = 2 * fixedFracMul;
 
+	const pixel = Array(src.shape[2]);
+
 	// For each row
 	for (let srcY = 0; srcY < srcHeight; srcY++) {
 		const dstY = srcY;
@@ -19,19 +21,15 @@ export const convolve = (src: NdArray<TypedArray>, dst: NdArray<TypedArray>, fil
 			// Get the filter that determines the current output pixel.
 			let srcX = filters[filterPtr++];
 
-			let r = 0;
-			let g = 0;
-			let b = 0;
-			let a = 0;
+			for (let i = 0; i < src.shape[2]; i++)
+				pixel[i] = 0;
 
 			// Apply the filter to the row to get the destination pixel r, g, b, a
 			for (let filterSize = filters[filterPtr++]; filterSize > 0; filterSize--) {
 				const filterValue = filters[filterPtr++];
 
-				r = ( r + filterValue * src.get(srcX, srcY, 0) );
-				g = ( g + filterValue * src.get(srcX, srcY, 1) );
-				b = ( b + filterValue * src.get(srcX, srcY, 2) );
-				a = ( a + filterValue * src.get(srcX, srcY, 3) );
+				for (let i = 0; i < src.shape[2]; i++)
+					pixel[i] = (pixel[i] + filterValue * src.get(srcX, srcY, i));
 
 				srcX++;
 			}
@@ -42,10 +40,8 @@ export const convolve = (src: NdArray<TypedArray>, dst: NdArray<TypedArray>, fil
 			// (!) Add 1/2 of value before clamping to get proper rounding. In other
 			// case brightness loss will be noticeable if you resize image with white
 			// border and place it on white background.
-			dst.set(dstX, dstY, 0, clamp( ( r + fixedFracMul ) / fixedFracMul2 ) );
-			dst.set(dstX, dstY, 1, clamp( ( g + fixedFracMul ) / fixedFracMul2 ) );
-			dst.set(dstX, dstY, 2, clamp( ( b + fixedFracMul ) / fixedFracMul2 ) );
-			dst.set(dstX, dstY, 3, clamp( ( a + fixedFracMul ) / fixedFracMul2 ) );
+			for (let i = 0; i < src.shape[2]; i++)
+				dst.set(dstX, dstY, i, clamp( ( pixel[i] + fixedFracMul ) / fixedFracMul2 ) );
 		}
 	}
 }
