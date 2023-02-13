@@ -15,7 +15,7 @@ function resize(
 ): void {
 	if (src.shape.length !== 3 || dst.shape.length !== 3)
 		throw new TypeError
-			('Input and output must have exactly 3 dimensions (width, height and colorspace)');
+			('Input and output must have exactly 3 dimensions (width, height and channel count)');
 
 	const [srcWidth, srcHeight] = src.shape;
 	const [dstWidth, dstHeight] = dst.shape;
